@@ -8,39 +8,26 @@ class CrawlDebatesSpider(scrapy.Spider):
 
     def start_requests(self):
         urls = [
-            'https://www.debate.org/opinions/do-you-agree-with-the-black-lives-matter-movement-1',
+            'https://www.debate.org/opinions/?sort=popular',
         ]
         for url in urls:
-            request = scrapy.Request(url=url, callback=self.parse_tag)
-            request.meta['tag_name'] = url.split('/')[-1]
-            yield request
-
-        # for url in urls:
-        #   request = scrapy.Request(url=url, callback=self.parse_tag)
-        #  request.meta['tag_name'] = url.split('/')[-1]
-        # yield request
+            requestUrl = scrapy.Request(url=url, callback=self.parse_urls)
+            requestUrl.meta['tag_name'] = url.split('/')[-1]
+            yield requestUrl
 
     def parse_urls(self, response):
         global items
         urls = response.xpath("//span[@class='image-frame']/a[1]/@href").extract()
-        i = 0
-        for url in urls[0:5]:
-            if url is not None:
-                items[i] = "https://www.debate.org/" + url
-                self.log("amir " + items[i], logging.WARN)
-            i = i + 1
-            yield items
-
-        for url in items:
-            itemsUrl = {
-                "url": url
-            }
-            # yield itemsUrl
+        for url2 in urls[0:5]:
+            concatinated_url = "https://debate.org" + url2
+            requestData = scrapy.Request(url=concatinated_url, callback=self.parse_tag)
+            requestData.meta['tag_name2'] = url2.split('/')[-1]
+            yield requestData
 
     def parse_tag(self, response):
 
         # retrieve the tag name
-        tag_name = response.meta['tag_name']
+        tag_name = response.meta['tag_name2']
 
         # use css function to parse the html and find the tags that contains the arguments
         yes_arguments = response.css('#yes-arguments .hasData')
