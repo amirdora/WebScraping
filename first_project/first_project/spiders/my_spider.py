@@ -1,3 +1,5 @@
+import logging
+
 import scrapy
 
 
@@ -5,27 +7,35 @@ class CrawlDebatesSpider(scrapy.Spider):
     name = "crawl_debate"
 
     def start_requests(self):
-        # predefinded pages to crawl
+        urls = [
+            'https://www.debate.org/opinions/do-you-agree-with-the-black-lives-matter-movement-1',
+        ]
+        for url in urls:
+            request = scrapy.Request(url=url, callback=self.parse_tag)
+            request.meta['tag_name'] = url.split('/')[-1]
+            yield request
 
-        self.getTopFiveOpinionUrls()
-
-        #for url in urls:
-         #   request = scrapy.Request(url=url, callback=self.parse_tag)
-          #  request.meta['tag_name'] = url.split('/')[-1]
-           # yield request
-
-    def getTopFiveOpinionUrls(self):
-        opinionUrls = "https://www.debate.org/opinions/?sort=popular";
-
-        request = scrapy.Request(url=opinionUrls, callback=self.parse_urls)
-        yield request
+        # for url in urls:
+        #   request = scrapy.Request(url=url, callback=self.parse_tag)
+        #  request.meta['tag_name'] = url.split('/')[-1]
+        # yield request
 
     def parse_urls(self, response):
-        opinionList = response.css('#opinions-list')
-        for opinion in opinionList:
-            yield {
-                'text': opinion
+        global items
+        urls = response.xpath("//span[@class='image-frame']/a[1]/@href").extract()
+        i = 0
+        for url in urls[0:5]:
+            if url is not None:
+                items[i] = "https://www.debate.org/" + url
+                self.log("amir " + items[i], logging.WARN)
+            i = i + 1
+            yield items
+
+        for url in items:
+            itemsUrl = {
+                "url": url
             }
+            # yield itemsUrl
 
     def parse_tag(self, response):
 
