@@ -1,8 +1,7 @@
 import logging
-from datetime import time
+import time
 
 import scrapy
-from scrapy import Selector
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -55,6 +54,7 @@ class CrawlDebatesSpider(scrapy.Spider):
             driver.get(concatinated_url)
 
             while True:
+                time.sleep(1)
                 try:
                     self.loadMoreData(driver)
                 except Exception:
@@ -75,7 +75,7 @@ class CrawlDebatesSpider(scrapy.Spider):
             item = parseConArguments(item, no_arguments)
 
             yield item
-            driver.quit()
+        driver.quit()
 
     def loadMoreData(self, driver):
         element = WebDriverWait(driver, 20).until(
