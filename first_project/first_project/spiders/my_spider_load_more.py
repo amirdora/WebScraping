@@ -1,13 +1,15 @@
+import time
+
 import scrapy
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import NoSuchElementException
 from logzero import logfile, logger
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class CountriesSpiderSpider(scrapy.Spider):
-
     # Initializing log file
     logfile("openaq_spider.log", maxBytes=1e6, backupCount=3)
     name = "countries_spider"
@@ -28,20 +30,23 @@ class CountriesSpiderSpider(scrapy.Spider):
         driver = webdriver.Chrome("/Users/ad/chromedriver")
 
         # Getting list of Countries
-        driver.get("https://openaq.org/#/countries")
+        driver.get("https://www.debate.org/opinions/do-you-agree-with-the-black-lives-matter-movement-1")
 
-        # Implicit wait
-        driver.implicitly_wait(10)
+        while True:
+            time.sleep(1)
+            try:
+                element = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="col-wi"]/div/div[5]/a')))
+                driver.execute_script("arguments[0].click();", element)
 
-        # Explicit wait
-        wait = WebDriverWait(driver, 5)
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "card__title")))
+            except Exception:
+                break
 
         # Extracting country names
-        countries = driver.find_elements_by_class_name("card__title")
+        args = driver.find_elements_by_xpath('//*[@id="yes-arguments"]/ul/li')
+
         countries_count = 0
         # Using Scrapy's yield to store output instead of explicitly writing to a JSON file
-        for country in countries:
+        for country in args:
             yield {
                 "country": country.text,
             }
