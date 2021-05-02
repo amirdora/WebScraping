@@ -1,6 +1,12 @@
 import logging
+from datetime import time
 
 import scrapy
+from logzero import logfile, logger
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium import webdriver
 
 
 def get_all_urls(response):
@@ -41,24 +47,35 @@ class CrawlDebatesSpider(scrapy.Spider):
         urls = get_all_urls(response)
         # iterating through 5 urls
         for url2 in urls[0:5]:
-            concatinated_url = "https://debate.org" + url2
-            requestData = scrapy.Request(url=concatinated_url, callback=self.parse_tag)
-            yield requestData
+            # Use headless option to not open a new browser window
+            options = webdriver.ChromeOptions()
+            options.add_argument("headless")
+            desired_capabilities = options.to_capabilities()
+            driver = webdriver.Chrome("/Users/ad/chromedriver")
+            # Getting list of Countries
+            concatinated_url = "https://www.debate.org" + url2
 
-    def parse_tag(self, response):
+            driver.get(concatinated_url)
 
-        # finding tags that contains the arguments
-        yes_arguments = response.css('#yes-arguments .hasData')
-        no_arguments = response.css('#no-arguments .hasData')
+            while True:
+                try:
+                    element = WebDriverWait(driver, 20).until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="col-wi"]/div/div[5]/a')))
+                    driver.execute_script("arguments[0].click();", element)
 
-        # main json dictionary
-        item = dict(topic=response.css('.q-title::text').get(),
-                    category=response.css('#breadcrumb a::text')[1].get(),
-                    pro_arguments=[],
-                    con_arguments=[])
+                except Exception:
+                    break
 
-        item = parseProArguments(item, yes_arguments)
+            # Extracting country names
+            args = driver.find_elements_by_xpath('//*[@id="yes-arguments"]/ul/li')
 
-        item = parseConArguments(item, no_arguments)
+            countries_count = 0
+            # Using Scrapy's yield to store output instead of explicitly writing to a JSON file
+            for country in args:
+                yield {
+                    "country": country.text,
+                }
+                countries_count += 1
 
-        yield item
+            driver.quit()
+            logger.info(f"Total number of Countries in openaq.org: {countries_count}")
