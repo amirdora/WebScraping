@@ -56,15 +56,24 @@ class CrawlDebatesSpider(scrapy.Spider):
         driver = self.initializingSileniumDriver()
 
         # iterating through 5 urls
-        for url2 in urls[1:2]:
+        for url2 in urls[0:5]:
             # Use headless option to not open a new browser window
             # Getting list of Countries
             concatinated_url = "https://www.debate.org" + url2
             driver.get(concatinated_url)
 
             while True:
+                self.logger.info("DebateSpider: while loop")
                 try:
-                    self.loadMoreData(driver)
+                    time.sleep(2)
+                    element = driver.find_element_by_class_name('debate-more-btn')
+                    if element.is_displayed():
+                        self.logger.info('DebateSpider: button  %s', "true")
+                        driver.execute_script("document.getElementsByClassName('debate-more-btn')[0].click()")
+                    else:
+                        self.logger.info('DebateSpider: button %s', "false")
+                        break
+
                 except Exception:
                     break
 
@@ -82,11 +91,6 @@ class CrawlDebatesSpider(scrapy.Spider):
 
             yield item
         driver.quit()
-
-    def loadMoreData(self, driver):
-        element = WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable((By.XPATH, '//*[@id="col-wi"]/div/div[5]/a')))
-        driver.execute_script("arguments[0].click();", element)
 
     def initializingSileniumDriver(self):
         options = webdriver.ChromeOptions()
