@@ -1,7 +1,7 @@
 import json
 from matplotlib import pyplot
 
-with open('arguments.json') as f:
+with open('data.json') as f:
     data = json.load(f)
 
 topic = []
