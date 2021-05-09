@@ -7,11 +7,9 @@ from selenium.webdriver.common.by import By
 
 
 class DebateSpider(scrapy.Spider):
-    name = 'crawl_sel'
+    name = 'debate_crawler'
     allowed_domains = ['debate.org']
-    start_urls = [
-        'https://www.debate.org/opinions/?sort=popular'
-    ]
+    start_urls = ['https://www.debate.org/opinions/?sort=popular']
 
     def parse(self, response):
         urls = get_all_urls(response)
